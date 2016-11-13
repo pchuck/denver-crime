@@ -1,0 +1,10 @@
+.RData
+.RHistory
+cache/
+data/
+denver-crime-map/data/
+ggmapTemp.png
+.Rproj.user
+*.Rproj
+rsconnect
+
