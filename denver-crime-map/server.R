@@ -13,13 +13,12 @@ function(input, output, session) {
         base <- leaflet(subset) %>%
         setView(lng=mean(subset$GEO_LON),
                 lat=mean(subset$GEO_LAT), zoom=12) %>%
-        addTiles() %>%
         addProviderTiles(MAP_TYPE, options = providerTileOptions(noWrap = TRUE))
 
         # add crime markers
         marked <- base %>%
-        addCircleMarkers(lng=~GEO_LON,
-                         lat=~GEO_LAT, color=~pal(OFFENSE_CATEGORY_ID),
+        addCircleMarkers(lng=~GEO_LON, lat=~GEO_LAT,
+                         color=~pal(OFFENSE_CATEGORY_ID),
                          radius=~OCCURRENCE_YEAR - minYear + 1,
                          group=~OFFENSE_CATEGORY_ID,
                          popup=paste(subset$FIRST_OCCURRENCE_DATE,

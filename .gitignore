@@ -3,6 +3,7 @@
 cache/
 data/
 denver-crime-map/data/
+denver-bike-theft-map/data/
 ggmapTemp.png
 .Rproj.user
 *.Rproj

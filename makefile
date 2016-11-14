@@ -15,16 +15,24 @@ prereqs:
 	R -e "install.packages(c('devtools', 'shiny'), repos='http://cran.us.r-project.org'); devtools::install_github('rstudio/shinyapps')"
 
 # run shiny server locally
-run_app:
+run_app_crime:
 	R -e "shiny::runApp('denver-crime-map', display.mode='showcase')"
+
+# run shiny server locally
+run_app_bike_theft:
+	R -e "shiny::runApp('denver-bike-theft-map', display.mode='showcase')"
 
 # register w. shiny credentials
 shinyio:
 	R -e "shinyapps::setAccountInfo(name='', token='', secret='')
 
 # deploy to shinyapps.io
-deploy_app:
+deploy_app_crime:
 	R -e "shinyapps::deployApp('denver-crime-map')"
+
+# deploy to shinyapps.io
+deploy_app_bike_theft:
+	R -e "shinyapps::deployApp('denver-bike-theft-map')"
 
 
 ## environment 
