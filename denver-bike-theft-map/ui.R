@@ -8,19 +8,19 @@ library(shiny)
 shinyUI(
     fluidPage(
         titlePanel(paste(TITLE, ": ", minYear, "-", maxYear, sep="")),
-        sidebarLayout(
-            sidebarPanel(
-                tabsetPanel(
-                    tabPanel("Hour", plotOutput('hourPlot')),
-                    tabPanel("Day", plotOutput('dayPlot')),
-                    tabPanel("Month", plotOutput('monthPlot'))
-                )
-            ),
-            mainPanel(
-                tabsetPanel(
-                    tabPanel("Map", leafletOutput("map"))
-                )
-            )
+        tabsetPanel(
+            tabPanel("Map",
+                     tags$style(type = "text/css",
+                     "#map {height: calc(100vh - 80px) !important;}"),
+                     leafletOutput("map")),
+            tabPanel("Neighborhood",
+                     tags$style(type = "text/css",
+                     "#neighborhoodPlot {height: calc(100vh - 80px) !important;}"),
+                     plotOutput('neighborhoodPlot')),
+            tabPanel("Year", plotOutput('yearPlot')),
+            tabPanel("Month", plotOutput('monthPlot')),
+            tabPanel("Day", plotOutput('dayPlot')),
+            tabPanel("Hour", plotOutput('hourPlot'))
         )
     )
 )

@@ -39,26 +39,39 @@ function(input, output, session) {
 
         marked
     })
-#    output$table <- renderDataTable({
-#        bikesub %>% count(OCCURRENCE_YEAR) %>% arrange(desc(n))
-#    })
     output$hourPlot <- renderPlot({
-        ggplot(data=bikesub, aes(bikesub$OCCURRENCE_HOUR)) +
-        geom_histogram(breaks=seq(0, 24, by=1), color="black",
-        fill="gray", alpha=0.4) + 
+        ggplot(data=bikesub, aes(OCCURRENCE_HOUR)) +
+        geom_histogram(breaks=seq(0, 24, by=1), color="black", fill="gray") + 
         labs(x="Hour of Day", y="Number of Thefts")
     })
     output$dayPlot <- renderPlot({
-        ggplot(data=bikesub, aes(bikesub$OCCURRENCE_DAY)) +
-        geom_histogram(breaks=seq(0, 7, by=1), color="black", 
-        fill="gray", alpha=0.4) + 
-        labs(x="Day of Week (Mon-Sun)", y="Number of Thefts")
+        ggplot(data=bikesub, aes(factor(OCCURRENCE_DAY))) +
+        geom_bar(color="black", fill="gray") + 
+        labs(x="Day of Week", y="Number of Thefts") + 
+        scale_x_discrete(labels=c("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"))
     })
     output$monthPlot <- renderPlot({
-        ggplot(data=bikesub, aes(bikesub$OCCURRENCE_MONTH)) +
-        geom_histogram(breaks=seq(0, 13, by=1), color="black",
-        fill="gray", alpha=0.4) + 
-        labs(x="Month of Year (Jan-Dec)", y="Number of Thefts")
+        ggplot(data=bikesub, aes(factor(OCCURRENCE_MONTH))) +
+        geom_bar(color="black", fill="gray") +
+        labs(x="Month of Year", y="Number of Thefts") +
+        scale_x_discrete(labels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))
     })
-    
+    output$yearPlot <- renderPlot({ # use 'biketheft' set here for yearly stats
+        ggplot(data=biketheft, aes(factor(OCCURRENCE_YEAR))) +
+        geom_bar(color="black", fill="gray") +
+        labs(x="Year", y="Number of Thefts")
+    })
+    output$neighborhoodPlot <- renderPlot({
+        ggplot(bikesub) + geom_bar(aes(x=NEIGHBORHOOD_ID, fill=DISTRICT_ID)) +
+            scale_x_discrete(limits = (bikesub %>%
+                                       count(NEIGHBORHOOD_ID) %>%
+                                       arrange(n)
+#                                       %>% top_n(n=20)
+                                       )$NEIGHBORHOOD_ID) +
+        coord_flip() +
+        labs(title="Thefts by Neighborhood and District",
+             x="Neighborhood", y="Count", fill="District")
+    })
 }
+
