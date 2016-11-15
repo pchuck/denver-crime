@@ -13,3 +13,7 @@ rsconnect
 # instead, README.md links to the two sub-projects
 crime.html
 crime.md
+
+# to create and deploy this one on github, use 'make deploy_ghpages'
+gh-pages/
+
