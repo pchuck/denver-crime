@@ -24,9 +24,19 @@ acquire_data:
 run_app_crime:
 	R -e "shiny::runApp('denver-crime-map', display.mode='showcase')"
 
+# create a static copy of the crime leaflet app for ghpages
+create_static_crime:
+	R -e "source(file='denver-crime-map.R')"
+	mv denver-crime-map.html gh-pages/
+
 # run shiny server locally
 run_app_bike_theft:
 	R -e "shiny::runApp('denver-bike-theft-map', display.mode='showcase')"
+
+# create a static copy of the bike theft leaflet app for ghpages
+create_static_bike_theft:
+	R -e "source(file='denver-bike-theft-map.R')"
+	mv denver-bike-theft-map.html gh-pages/
 
 # register w. shiny credentials
 shinyio:
@@ -39,6 +49,10 @@ deploy_app_crime:
 # deploy to shinyapps.io
 deploy_app_bike_theft:
 	R -e "shinyapps::deployApp('denver-bike-theft-map')"
+
+# deply to ghpages
+deploy_ghpages: create_static_bike_theft create_static_crime
+	git subtree push --prefix gh-pages/ origin gh-pages
 
 
 ## environment 

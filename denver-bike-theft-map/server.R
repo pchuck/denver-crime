@@ -11,33 +11,8 @@ library(ggplot2)
 function(input, output, session) {
     # render the main map
     output$map <- renderLeaflet({
-        # add the background
-        base <- leaflet(bikesub) %>%
-            setView(lng=mean(bikesub$GEO_LON), lat=mean(bikesub$GEO_LAT),
-                    zoom=ZOOM_LEVEL) %>%
-            addTiles(group="OSM") %>%
-            addProviderTiles("CartoDB.DarkMatter", group="Dark") %>%
-            addProviderTiles("Thunderforest.OpenCycleMap", group="Cycle") %>%
-            addProviderTiles("Stamen.TonerLite", group="Toner")
-
-        # add crime markers and display the map
-        marked <- base %>%
-            addCircleMarkers(lng=~GEO_LON, lat=~GEO_LAT,
-                             color=~pal(OCCURRENCE_YEAR_STRING),
-                             radius=RADIUS,
-                             group=~OCCURRENCE_YEAR_STRING,
-                             popup=paste(bikesub$FIRST_OCCURRENCE_DATE,
-                                         bikesub$NEIGHBORHOOD_ID,
-                                         bikesub$INCIDENT_ADDRESS,
-                                         sep="<br/>"), 
-                             fillOpacity=OPACITY) %>%
-            addLegend(pal=pal, values=groups) %>%
-            addLayersControl(overlayGroups=groups,
-                             baseGroups=c("Toner", "Dark", "OSM", "Cycle"), 
-                             options=layersControlOptions(collapsed=TRUE),
-                             position="bottomright")
-
-        marked
+        createCrimeMap_YearOverlay(bikesub, groups, pal,
+                                   RADIUS, OPACITY, ZOOM_LEVEL)
     })
     output$hourPlot <- renderPlot({
         ggplot(data=bikesub, aes(OCCURRENCE_HOUR)) +

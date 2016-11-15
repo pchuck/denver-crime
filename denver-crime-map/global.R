@@ -11,6 +11,7 @@ source(file="functions.R")
 TITLE <- "Denver Crime"
 CRIME_LOCAL <- "data/denver_crime.csv" # static copy of the open data
 DATE_FORMAT <- "%Y-%m-%d %H:%M:%S" # date format used in the source data
+OPACITY <- 0.8
 
 # read and transform the Denver open data crime dataset
 crime <- readDenverCrime(CRIME_LOCAL)
