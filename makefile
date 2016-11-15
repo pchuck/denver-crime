@@ -14,6 +14,12 @@ render:
 prereqs:
 	R -e "install.packages(c('devtools', 'shiny'), repos='http://cran.us.r-project.org'); devtools::install_github('rstudio/shinyapps')"
 
+# acquire data from the Open Data source and segment for specific apps
+acquire_data:
+	R -e "source(file='refresh-data.R')"
+	cp data/denver_bike_theft.csv denver-bike-theft-map/data/
+	cp data/denver_crime.csv denver-crime-map/data/
+
 # run shiny server locally
 run_app_crime:
 	R -e "shiny::runApp('denver-crime-map', display.mode='showcase')"
@@ -45,4 +51,3 @@ create_env:
 clean:
 	rm -f *.html *.md
 	rm -rf figure/
-

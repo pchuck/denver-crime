@@ -5,29 +5,15 @@
 ##
 library(RColorBrewer)
 library(leaflet)
+source(file="functions.R")
 
 # various constants
 TITLE <- "Denver Crime"
-SOURCE <- "data/denver_crime.csv" # static copy of the open data
+CRIME_LOCAL <- "data/denver_crime.csv" # static copy of the open data
 DATE_FORMAT <- "%Y-%m-%d %H:%M:%S" # date format used in the source data
-MAP_TYPE <- "Stamen.TonerLite" # underlying map tile source/type
-BAD_LON <- -100 # consider datapoints outside this longitude invalid
 
 # read and transform the Denver open data crime dataset
-crime <- read.csv(SOURCE,
-    sep=",", header=TRUE, stringsAsFactors=FALSE, 
-    colClasses=c("OFFENSE_CODE"="factor",
-                 "OFFENSE_CODE_EXTENSION"="factor",
-                 "OFFENSE_TYPE_ID"="factor",
-                 "OFFENSE_CATEGORY_ID"="factor",
-                 "INCIDENT_ADDRESS"="character",
-                 "DISTRICT_ID"="factor",
-                 "PRECINCT_ID"="factor",
-                 "NEIGHBORHOOD_ID"="factor")
-)
-
-# discard wildly inconsistent geo points
-crime <- crime[!(crime$GEO_LON > BAD_LON), ]
+crime <- readDenverCrime(CRIME_LOCAL)
 
 # transform the date fields
 crime$FIRST_OCCURRENCE_DATE <-
@@ -37,23 +23,20 @@ crime$FIRST_OCCURRENCE_DATE <-
 crime$OCCURRENCE_YEAR <- 
     as.numeric(format(crime$FIRST_OCCURRENCE_DATE, "%Y"))
 
-# separate traffic crimes. there's some overlap here, e.g. vehicular assault
-full <- crime
-traffic <- crime[crime$IS_TRAFFIC %in% c(1), ]
-crime <- crime[crime$IS_CRIME %in% c(1), ]
-
-# ignore some types to make the interactive display more responsive
+# super-group including all offense categories
 groups_all <- unique(crime$OFFENSE_CATEGORY_ID)
-groups_ignore <- c("public-disorder", 
-                   "white-collar-crime",
-                   "all-other-crimes",
-                   "other-crimes-against-persons",
-                   "theft-from-motor-vehicle",
-                   "auto-theft")
-groups <- groups_all[! groups_all %in% groups_ignore]
 
-# remove data missing geotags, dates or in the ignored groups
-subset <- crime[!crime$OFFENSE_CATEGORY_ID %in% groups_ignore &
+# ignored - categories w/o location, more frequent and non-violent crimes
+groups_ignore <- c("drug-alcohol", "all-other-crimes", "public-disorder", "larceny", "theft-from-motor-vehicle", "auto-theft", "other-crimes-against-persons", "white-collar-crime", "sexual-assault")
+
+# default display - violent crimes
+groups_display <- c("murder", "arson", "aggravated-assault",
+                    "burglary", "robbery")
+
+groups <- groups_display # vs. groups_all[! groups_all %in% groups_ignore]
+
+# include display groups and remove data missing geotags or dates
+subset <- crime[crime$OFFENSE_CATEGORY_ID %in% groups_display &
                 !is.na(crime$GEO_LON) & !is.na(crime$GEO_LAT) &
                 !is.na(crime$OCCURRENCE_YEAR), ]
 
@@ -62,5 +45,6 @@ minYear <- min(subset$OCCURRENCE_YEAR, na.rm=TRUE)
 maxYear <- max(subset$OCCURRENCE_YEAR, na.rm=TRUE)
 
 # color scheme for groups
-colors <- brewer.pal(length(groups), "Paired")
+# colors <- brewer.pal(length(groups), "Paired")
+colors <- c("tomato", "darkgreen", "red", "purple", "navyblue", "darkgray")
 pal <- colorFactor(colors, subset$OFFENSE_CATEGORY_ID)

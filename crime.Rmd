@@ -10,6 +10,7 @@ output:
   if(!require(curl)) install.packages("curl", dep=T)
   if(!require(leaflet)) install.packages("leaflet", dep=T)
   if(!require(RColorBrewer)) install.packages("RColorBrewer", dep=T)
+  source(file="functions.R")
 ```
 
 # Denver Crime
@@ -17,109 +18,52 @@ output:
 ## data acquisition
 
 ### data source - Denver Open Data
-
 ```{r}
-  crime_url <- "http://data.denvergov.org/download/gis/crime/csv/crime.csv"
+  crime_local <- "data/denver_crime_full.csv"
 ```
 
-### save a copy of the data source file offline
+### acquire the data from the open data repository
 ```{r eval=FALSE}
-  download.file(url=crime_url, destfile='data/denver_crime.csv', method='wget')
+  crime_url <- "http://data.denvergov.org/download/gis/crime/csv/crime.csv"
+  acquireAndSave(crime_url, crime_local)
 ```
 
 ### and, read from disk w/ transformation
 ```{r}
-# direct read
-#  crime <- read.csv( curl(crime_url), sep=",", header=T )
-
-# INCIDENT_ID,OFFENSE_ID,OFFENSE_CODE,OFFENSE_CODE_EXTENSION,OFFENSE_TYPE_ID,OFFENSE_CATEGORY_ID,FIRST_OCCURRENCE_DATE,LAST_OCCURRENCE_DATE,REPORTED_DATE,INCIDENT_ADDRESS,GEO_X,GEO_Y,GEO_LON,GEO_LAT,DISTRICT_ID,PRECINCT_ID,NEIGHBORHOOD_ID,IS_CRIME,IS_TRAFFIC
-
-  crime <- read.csv("data/denver_crime.csv",
-    sep=",", header=TRUE, stringsAsFactors=FALSE, 
-    colClasses=c("OFFENSE_CODE"="factor",
-                 "OFFENSE_CODE_EXTENSION"="factor",
-                 "OFFENSE_TYPE_ID"="factor",
-                 "OFFENSE_CATEGORY_ID"="factor",
-                 "INCIDENT_ADDRESS"="character",
-                 "DISTRICT_ID"="factor",
-                 "PRECINCT_ID"="factor",
-                 "NEIGHBORHOOD_ID"="factor")
-  )
+  crime_full <- readDenverCrime(crime_local)
 ```
 
 ## transformation
 
 ### create new columns with time components
 ```{r}
-  crime$FIRST_OCCURRENCE_DATE <-
-    as.POSIXct(crime$FIRST_OCCURRENCE_DATE,format="%Y-%m-%d %H:%M:%S")
-  crime$REPORTED_DATE <-
-    as.POSIXct(crime$REPORTED_DATE,format="%Y-%m-%d %H:%M:%S")
-
-  crime$OCCURRENCE_HOUR <-
-    as.numeric(format(crime$FIRST_OCCURRENCE_DATE, "%H")) +
-    as.numeric(format(crime$FIRST_OCCURRENCE_DATE, "%M")) / 60
-
-  crime$OCCURRENCE_DAY <- 
-    as.numeric(format(crime$FIRST_OCCURRENCE_DATE, "%u"))
-
-  crime$OCCURRENCE_MONTH <- 
-    as.numeric(format(crime$FIRST_OCCURRENCE_DATE, "%m"))
-
-  crime$OCCURRENCE_YEAR <- 
-    as.numeric(format(crime$FIRST_OCCURRENCE_DATE, "%Y"))
+  crime_full$FIRST_OCCURRENCE_DATE <-
+    as.POSIXct(crime_full$FIRST_OCCURRENCE_DATE, format="%Y-%m-%d %H:%M:%S")
+  crime_full$REPORTED_DATE <-
+    as.POSIXct(crime_full$REPORTED_DATE, format="%Y-%m-%d %H:%M:%S")
+  crime_full$OCCURRENCE_HOUR <-
+    as.numeric(format(crime_full$FIRST_OCCURRENCE_DATE, "%H")) +
+    as.numeric(format(crime_full$FIRST_OCCURRENCE_DATE, "%M")) / 60
+  crime_full$OCCURRENCE_DAY <- 
+    as.numeric(format(crime_full$FIRST_OCCURRENCE_DATE, "%u"))
+  crime_full$OCCURRENCE_MONTH <- 
+    as.numeric(format(crime_full$FIRST_OCCURRENCE_DATE, "%m"))
+  crime_full$OCCURRENCE_YEAR <- 
+    as.numeric(format(crime_full$FIRST_OCCURRENCE_DATE, "%Y"))
 ```
 
 ### convenient data subsets
 ```{r}
-  full <- crime
   # there's some overlap here, e.g. vehicular homicide
-  traffic <- crime[crime$IS_TRAFFIC %in% c(1), ]
-  crime <- crime[crime$IS_CRIME %in% c(1), ]
+  crime <- subsetNonTraffic(crime_full)
+  traffic <- subsetTraffic(crime_full)
+
+  # bike theft
+  biketheft <- subsetBikeTheft(crime_full)
 ```
 
 ## visualization
 ```{r}
-    groups_all <- unique(subset$OFFENSE_CATEGORY_ID)
-    groups_ignore <- c("public-disorder", 
-                       "white-collar-crime",
-                       "all-other-crimes",
-                       "other-crimes-against-persons")
-    groups <- groups_all[! groups_all %in% groups_ignore]
-    
-    subset <- crime[!crime$OFFENSE_CATEGORY_ID %in% groups_ignore &
-                    !is.na(crime$GEO_LON) & !is.na(crime$GEO_LAT) &
-                    !is.na(crime$OCCURRENCE_YEAR), ]
-
-    year_min <- min(subset$OCCURRENCE_YEAR)
-    
-    colors <- brewer.pal(length(groups), "Paired")
-    pal <- colorFactor(colors, subset$OFFENSE_CATEGORY_ID)
-
-    base <- leaflet(subset) %>%
-         setView(lng=mean(subset$GEO_LON),
-                 lat=mean(subset$GEO_LAT), zoom=12) %>%
-         addTiles() %>%
-         addProviderTiles("Stamen.TonerLite",
-                          options = providerTileOptions(noWrap = TRUE))
-
-    interactive <- base %>%
-        addCircleMarkers(lng=~GEO_LON,
-                         lat=~GEO_LAT, color=~pal(OFFENSE_CATEGORY_ID),
-                         radius=~OCCURRENCE_YEAR - year_min + 1,
-                         group=~OFFENSE_CATEGORY_ID,
-                         popup=paste(subset$FIRST_OCCURRENCE_DATE,
-                                     subset$NEIGHBORHOOD_ID,
-                                     subset$INCIDENT_ADDRESS,
-                                     subset$OFFENSE_CATEGORY_ID, 
-                                     subset$OFFENSE_TYPE_ID,
-                                     sep="<br/>"), 
-                         fillOpacity=0.8) %>%
-        addLegend(pal=pal, values=groups) %>%
-        addLayersControl(overlayGroups=groups,
-                         options=layersControlOptions(collapsed=FALSE),
-                         position="bottomright") %>%
-        hideGroup(groups)
-
-interactive
+  # code migrated to shiny apps.
+  # see ./denver-crime-map and ./denver-bike-theft-map
 ```

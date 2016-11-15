@@ -14,11 +14,11 @@ function(input, output, session) {
         # add the background
         base <- leaflet(bikesub) %>%
             setView(lng=mean(bikesub$GEO_LON), lat=mean(bikesub$GEO_LAT),
-                    zoom=12) %>%
+                    zoom=ZOOM_LEVEL) %>%
             addTiles(group="OSM") %>%
             addProviderTiles("CartoDB.DarkMatter", group="Dark") %>%
             addProviderTiles("Thunderforest.OpenCycleMap", group="Cycle") %>%
-            addProviderTiles(MAP_TYPE, group="Toner")
+            addProviderTiles("Stamen.TonerLite", group="Toner")
 
         # add crime markers and display the map
         marked <- base %>%
@@ -33,7 +33,7 @@ function(input, output, session) {
                              fillOpacity=OPACITY) %>%
             addLegend(pal=pal, values=groups) %>%
             addLayersControl(overlayGroups=groups,
-                             baseGroups=c("Dark", "Cycle", "Toner", "OSM"), 
+                             baseGroups=c("Toner", "Dark", "OSM", "Cycle"), 
                              options=layersControlOptions(collapsed=TRUE),
                              position="bottomright")
 
@@ -66,9 +66,7 @@ function(input, output, session) {
         ggplot(bikesub) + geom_bar(aes(x=NEIGHBORHOOD_ID, fill=DISTRICT_ID)) +
             scale_x_discrete(limits = (bikesub %>%
                                        count(NEIGHBORHOOD_ID) %>%
-                                       arrange(n)
-#                                       %>% top_n(n=20)
-                                       )$NEIGHBORHOOD_ID) +
+                                       arrange(n))$NEIGHBORHOOD_ID) +
         coord_flip() +
         labs(title="Thefts by Neighborhood and District",
              x="Neighborhood", y="Count", fill="District")

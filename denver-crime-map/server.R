@@ -13,7 +13,9 @@ function(input, output, session) {
         base <- leaflet(subset) %>%
         setView(lng=mean(subset$GEO_LON),
                 lat=mean(subset$GEO_LAT), zoom=12) %>%
-        addProviderTiles(MAP_TYPE, options = providerTileOptions(noWrap = TRUE))
+        addTiles(group="OSM") %>%
+        addProviderTiles("CartoDB.DarkMatter", group="Dark") %>%
+        addProviderTiles("Stamen.TonerLite", group="Toner")
 
         # add crime markers
         marked <- base %>%
@@ -30,9 +32,13 @@ function(input, output, session) {
                          fillOpacity=0.8) %>%
         addLegend(pal=pal, values=groups) %>%
         addLayersControl(overlayGroups=groups,
+                         baseGroups=c("Toner", "Dark", "OSM"),
                          options=layersControlOptions(collapsed=FALSE),
                          position="bottomright") %>%
-        hideGroup(groups)
+        hideGroup(groups) %>%
+        # show by default a couple of groups..
+        showGroup("murder") %>%
+        showGroup("arson")                 
 
         # display the map
         marked
