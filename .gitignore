@@ -9,3 +9,7 @@ ggmapTemp.png
 *.Rproj
 rsconnect
 
+# in this repo, not storing the rendered markdown
+# instead, README.md links to the two sub-projects
+crime.html
+crime.md
