@@ -23,6 +23,6 @@ rhtml <- paste(fileName, ".html", sep = "")
 ## rmarkdown::render(rmd, "html_document")
 
 ## to render and send to browser..
-knit2html(rmd, force_vRE1=TRUE)
+knit2html(rmd, force_v1=TRUE)
 browseURL(rhtml)
 
